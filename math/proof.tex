@@ -1,0 +1,614 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem*{maintheorem}{Main Theorem}
+
+\newcommand{\lca}{\operatorname{lca}}
+\newcommand{\Opt}{\operatorname{Opt}}
+\newcommand{\Cost}{\operatorname{Cost}}
+\newcommand{\code}[1]{\texttt{#1}}
+
+\title{The strategy computed by \code{compute\_optimal\_guesses.py} is optimal}
+\author{}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+%% ---------------------------------------------------------------------------
+\section{The game}
+\label{sec:game}
+
+The game is played on a fixed finite rooted tree $T$ with root $r$. Each node $v$
+has a boolean attribute $\code{canBeAnswer}(v)$. We call the nodes with
+$\code{canBeAnswer}(v) = \code{true}$ \emph{answer nodes}, write $A$ for the set
+of answer nodes, and let $n = |A|$, which we assume is at least~$1$. The tree is
+the same in every round.
+
+A round is played as follows.
+\begin{enumerate}
+  \item A hidden answer $a$ is chosen uniformly at random from $A$.
+  \item The player guesses one node at a time, and every guess must be an answer
+    node. After each guess $g$, the player is told whether $g = a$. If so, the
+    round ends. If not, the player is also told $\lca(g, a)$, the lowest common
+    ancestor of $g$ and $a$, that is, the root of the smallest subtree of $T$
+    that contains both $g$ and $a$.
+\end{enumerate}
+The number of guesses in a round counts every guess, including the final, correct
+one. The player's goal is to minimize the expected number of guesses.
+
+Throughout, a \emph{subtree} is a node together with all of its descendants, and
+every node counts as an ancestor and as a descendant of itself. So if the answer
+$a$ is a descendant of the guess $g$, the player is told $\lca(g, a) = g$, and if
+$g$ is a descendant of $a$, she is told $\lca(g, a) = a$.
+
+The player may choose each guess based on everything she has been told so far in
+the round, so a strategy is a decision tree: it specifies the first guess and, for
+each feedback the player can get after a wrong guess, how to continue.
+Section~\ref{sec:strategies} makes this precise. Since the answer is uniform on
+$A$, the expected number of guesses of a strategy is $1/n$ times its
+\emph{cost}: the sum, over all $a \in A$, of the number of guesses the strategy
+makes when the answer is $a$. So minimizing the expected number of guesses is the
+same as minimizing the cost. A strategy that makes random choices can be viewed as
+first choosing a deterministic strategy at random and then following it, so its
+expected number of guesses is an average of those of deterministic strategies,
+and is at least the smallest of them. We therefore only consider deterministic
+strategies.
+
+%% ---------------------------------------------------------------------------
+\section{The algorithm}
+\label{sec:algorithm}
+
+This section restates, in mathematical notation, what
+\code{compute\_optimal\_guesses.py} computes in the functions
+\code{count\_answers}, \code{sort\_options}, \code{option\_guess},
+\code{strategy\_groups} and \code{build\_strategy}, and how the player uses its
+output. The rest of the script reads the tree from a CSV file, sorts the groups,
+and writes them to a CSV file.
+
+\paragraph{Sizes.}
+For a node $v$, let $T_v$ be the subtree rooted at $v$, let $A_v = A \cap T_v$ be
+the answer nodes in it, and let $s(v) = |A_v|$. (\code{count\_answers} stores
+$s(v)$ in \code{v.size}.) The \emph{height} of $v$ is the largest number of edges
+on a path from $v$ down to a node of $T_v$, so a child has smaller height than its
+parent.
+
+\paragraph{Options.}
+The \emph{options} of a node $v$ are the places where an answer node of $T_v$ can
+be:
+\begin{itemize}
+  \item each child $c$ of $v$ with $s(c) \ge 1$, standing for ``the answer is in
+    $T_c$'';
+  \item if $v$ is an answer node, one more option, written $\hat v$, standing for
+    ``the answer is $v$ itself''. (The code represents this option by $v$.)
+\end{itemize}
+Let $O(v)$ be the set of options of $v$, and $k_v = |O(v)|$. For an option $o$ of
+$v$, let $A(o)$ be the set of answer nodes it stands for, so $A(c) = A_c$ for a
+child $c$ and $A(\hat v) = \{v\}$, and let the \emph{weight} of $o$ be
+$w(o) = |A(o)|$, so $w(c) = s(c)$ and $w(\hat v) = 1$ (\code{option\_size}). The
+sets $A(o)$ for $o \in O(v)$ are nonempty and pairwise disjoint, and their union
+is $A_v$. In particular, $v$ has at least one option if and only if $s(v) \ge 1$.
+
+\code{sort\_options} sorts the options of $v$ into a list
+\[
+  L(v) = \bigl(\ell_v(0), \ell_v(1), \dots, \ell_v(k_v - 1)\bigr)
+  \quad\text{with}\quad
+  w(\ell_v(0)) \ge w(\ell_v(1)) \ge \dots \ge w(\ell_v(k_v - 1)).
+\]
+Options of equal weight are ordered alphabetically, ignoring case, by the name of
+the guess that checks them (defined below). This tie-breaking rule plays no role
+in the proof: everything below holds for every ordering of $L(v)$ by nonincreasing
+weight. For $0 \le i \le k_v$, let
+\[
+  R(v, i) = \{\ell_v(i), \ell_v(i+1), \dots, \ell_v(k_v - 1)\}
+\]
+be the set of options from position $i$ on, so $R(v, 0) = O(v)$ and
+$R(v, k_v) = \emptyset$.
+
+\paragraph{Guesses.}
+For an option $o$ of a node $v$, the guess that \emph{checks} $o$
+(\code{option\_guess}) is
+\[
+  \gamma(o) =
+  \begin{cases}
+    v & \text{if } o = \hat v,\\
+    \gamma(\ell_c(0)) & \text{if } o \text{ is a child } c \text{ of } v.
+  \end{cases}
+\]
+So the guess that checks a child $c$ is the guess that checks the first option of
+$c$, which \code{sort\_options} stores in \code{c.guess}. This recursive
+definition is well founded, since $\ell_c(0)$ is either $\hat c$ or a child of
+$c$, which has smaller height than $c$. By induction on the height,
+$\gamma(o) \in A(o)$ for every option $o$: $\gamma(\hat v) = v \in A(\hat v)$, and
+$\gamma(c) = \gamma(\ell_c(0)) \in A(\ell_c(0)) \subseteq A_c$.
+
+\paragraph{Groups.}
+\code{build\_strategy} returns the following groups (\code{strategy\_groups}):
+\begin{itemize}
+  \item a group for the root $r$, in which the player checks every option of $r$,
+    in the order $\ell_r(0), \ell_r(1), \dots, \ell_r(k_r - 1)$;
+  \item a group for every other node $u$ with $k_u \ge 2$, in which the player
+    checks every option of $u$ but the first, in the order
+    $\ell_u(1), \dots, \ell_u(k_u - 1)$.
+\end{itemize}
+Each group is written as one row, which lists the guesses that check its options,
+in order, and gives the total weight of these options as the size of the group.
+
+\paragraph{The strategy.}
+The docstring of the script explains how the player uses the rows. Her
+\emph{group} is the last lowest common ancestor she was told, or the root before
+her first wrong guess, and she makes the guesses in the row of her group in
+order, until she is told a different group or guesses the answer. So at each
+point, the player is in a \emph{state} $(v, i)$, where $v$ is a node and
+$0 \le i < k_v$: her group is $v$, and her next guess is $\gamma(\ell_v(i))$, the
+guess that checks the option $\ell_v(i)$. She starts in state $(r, 0)$. If her
+guess is wrong and she is told $\lambda$:
+\begin{itemize}
+  \item if $\lambda = v$, she moves to $(v, i + 1)$;
+  \item if $\lambda \ne v$, she moves to $(\lambda, 1)$, since the row of
+    $\lambda$ starts with the guess that checks $\ell_\lambda(1)$.
+\end{itemize}
+(The row of the root starts with the guess that checks $\ell_r(0)$ instead, but
+this doesn't matter: the player's group is always an ancestor of the answer,
+being the root or the lowest common ancestor of an earlier guess and the answer,
+and her guesses are in the subtree of her group. So she is always told her group
+or a node below it, and never the root when her group is another node.) It is
+less obvious that $(v, i + 1)$ and $(\lambda, 1)$ are states, that is, that
+$i + 1 < k_v$ in the first case and $k_\lambda \ge 2$ in the second (which also
+means that $\lambda$ has a row); Theorem~\ref{thm:main} shows that this is always
+the case.
+
+The player's guess and her next state depend only on her current state and on the
+feedback, which depends only on the guess and the answer. So for every state
+$(v, i)$, even one that doesn't come up in a real game, such as $(u, 0)$ for
+$u \ne r$, we can consider \emph{playing from $(v, i)$}: starting in state
+$(v, i)$ and following these rules. For an answer node $a$, we say that playing
+from $(v, i)$ \emph{finds} $a$ if, when the answer is $a$, the player only moves
+to states and eventually guesses $a$. We then write $N_{v,i}(a)$ for the number of
+guesses she makes, including the last one.
+
+In words, the player checks the options of her group one at a time, largest
+first. To check $\hat v$, she guesses $v$. To check a child $c$, she guesses
+$\gamma(c)$, which is the first guess she would make playing from $(c, 0)$, that
+is, if she knew that the answer is in $T_c$. If she is then told a node
+$u \ne v$, she checks the options of $u$ from the second one on.
+
+The goal of this document is to prove:
+
+\begin{maintheorem}
+  Playing from $(r, 0)$ finds the answer, whichever answer node it is, and no
+  strategy has a smaller expected number of guesses.
+\end{maintheorem}
+
+This is the case $(v, i) = (r, 0)$ of Theorem~\ref{thm:main}, which shows more
+generally that playing from any state $(v, i)$ is optimal for finding an answer
+that is known to be in one of the options $\ell_v(i), \dots, \ell_v(k_v - 1)$.
+
+%% ---------------------------------------------------------------------------
+\section{Outline of the proof}
+
+\begin{enumerate}
+  \item A guess that can't be right gives no information, so an optimal strategy
+    only makes guesses that can be right (Lemmas~\ref{lem:feedback},
+    \ref{lem:useless} and~\ref{lem:bellman}).
+  \item A guess in an option $o$ of a node $v$ separates the answers in $A(o)$
+    from the others. For the answers outside $A(o)$, the player only learns that
+    the answer is not in $A(o)$. For the answers in $A(o)$, the game goes on
+    exactly as if the answer had been known to be in $A(o)$ from the start. So
+    the optimal cost is the sum of the optimal costs of the options, plus a
+    waiting cost: if the options are checked in the order $o_0, o_1, \dots$, each
+    answer in $A(o_j)$ pays $j$ extra guesses for the checks of
+    $o_0, \dots, o_{j-1}$ (Lemmas~\ref{lem:split} and~\ref{lem:order}).
+  \item The waiting cost is smallest when the options are checked largest first
+    (Lemma~\ref{lem:order}, by an exchange argument).
+  \item The code's strategy has the same structure. In each group, it checks the
+    options largest first, and after it checks a child $c$ of its group, it plays
+    for the answers in $T_c$ exactly as it would play from $(c, 0)$, as if it had
+    known from the start that the answer is in $T_c$. An induction then shows
+    that its cost is optimal (Theorem~\ref{thm:main}).
+\end{enumerate}
+
+%% ---------------------------------------------------------------------------
+\section{Candidate sets and feedback}
+\label{sec:feedback}
+
+For a node $v$ and a set $S \subseteq O(v)$ of options of $v$, let
+\[
+  A(v, S) = \bigcup_{o \in S} A(o)
+  \qquad\text{and}\qquad
+  w(S) = |A(v, S)| = \sum_{o \in S} w(o).
+\]
+We call a set of this form with $S \ne \emptyset$ a \emph{candidate set}. For
+example, $A = A(r, O(r))$, $A_v = A(v, O(v))$ whenever $s(v) \ge 1$, and
+$\{v\} = A(v, \{\hat v\})$ for every answer node $v$. For a node $v$ and
+$0 \le i \le k_v$, let
+\[
+  X(v, i) = A(v, R(v, i)) = A(\ell_v(i)) \cup \dots \cup A(\ell_v(k_v - 1))
+\]
+be the set of answers in the options of $v$ from position $i$ on. It is a
+candidate set if $i < k_v$, and $X(v, k_v) = \emptyset$.
+
+For a set $X \subseteq A$, a guess $g \in A$ and a node $\lambda$, let
+\[
+  X^g_\lambda = \{\, a \in X \setminus \{g\} : \lca(g, a) = \lambda \,\}
+\]
+be the set of answers in $X$ for which the guess $g$ is wrong and the feedback is
+$\lambda$. We call these sets the \emph{feedback classes} of $g$ on $X$. The
+nonempty ones partition $X \setminus \{g\}$.
+
+\begin{lemma}[Feedback]
+  \label{lem:feedback}
+  Let $v$ be a node.
+  \begin{enumerate}[label=(\alph*)]
+    \item If $o$ and $o'$ are different options of $v$, $g \in A(o)$ and
+      $a \in A(o')$, then $\lca(g, a) = v$.
+    \item If $c$ is a child of $v$ and $g, a \in A_c$, then $\lca(g, a) \in T_c$;
+      in particular, $\lca(g, a) \ne v$.
+  \end{enumerate}
+  Consequently, if $X = A(v, S)$ is a candidate set, $o \in S$, and $g \in A(o)$,
+  then $X^g_v = A(v, S \setminus \{o\})$, and $X^g_\lambda = A(o)^g_\lambda$ for
+  every node $\lambda \ne v$.
+\end{lemma}
+
+\begin{proof}
+  (a) Both $g$ and $a$ are in $T_v$, so $v$ is a common ancestor of them. If $o$
+  and $o'$ are two different children $c$ and $c'$ of $v$, then $g \in T_c$ and
+  $a \in T_{c'}$, and since $T_c$ and $T_{c'}$ are disjoint, no node below $v$ is
+  an ancestor of both. If $o = \hat v$, then $g = v$ is an ancestor of $a$. If
+  $o' = \hat v$, then $a = v$ is an ancestor of $g$. In all cases,
+  $\lca(g, a) = v$.
+
+  (b) $c$ is a common ancestor of $g$ and $a$, so $\lca(g, a)$ is a descendant of
+  $c$, and $v \notin T_c$.
+
+  For the consequence, let $a \in X \setminus \{g\}$. If $a \notin A(o)$, then
+  $a \in A(o')$ for some $o' \in S \setminus \{o\}$, so $\lca(g, a) = v$ by (a).
+  If $a \in A(o)$, then $o \ne \hat v$, because $A(\hat v) = \{v\}$ has only one
+  element and $a \ne g$; so $o$ is a child of $v$, and $\lca(g, a) \ne v$ by (b).
+  So the answers in $X \setminus \{g\}$ with feedback $v$ are exactly those in
+  $X \setminus A(o) = A(v, S \setminus \{o\})$, and for $\lambda \ne v$, the
+  answers with feedback $\lambda$ are exactly the answers
+  $a \in A(o) \setminus \{g\}$ with $\lca(g, a) = \lambda$, which form
+  $A(o)^g_\lambda$.
+\end{proof}
+
+\begin{lemma}[A guess that can't be right gives no information]
+  \label{lem:useless}
+  Let $X = A(v, S)$ be a candidate set and $g \in A \setminus X$. Then
+  $\lca(g, a)$ is the same node for all $a \in X$. In other words, one feedback
+  class of $g$ on $X$ is $X$ itself, and all others are empty.
+\end{lemma}
+
+\begin{proof}
+  If $g \in T_v$, then $g \in A_v$, so $g \in A(o)$ for some option
+  $o \in O(v)$, and $o \notin S$ because $g \notin X$. Every $a \in X$ lies in
+  $A(o')$ for some $o' \in S$, so $o' \ne o$, and $\lca(g, a) = v$ by
+  Lemma~\ref{lem:feedback}(a).
+
+  If $g \notin T_v$, let $x = \lca(g, v)$, and let $a \in X$. Since $x$ is an
+  ancestor of $v$, and $v$ is an ancestor of $a$, $x$ is a common ancestor of $g$
+  and $a$. Conversely, let $y$ be a common ancestor of $g$ and $a$. Both $y$ and
+  $v$ are ancestors of $a$, so one of them is an ancestor of the other. If $y$
+  were a descendant of $v$, then $g \in T_y \subseteq T_v$, which is false. So
+  $y$ is an ancestor of $v$, hence a common ancestor of $g$ and $v$, hence an
+  ancestor of $x$. Therefore $\lca(g, a) = x$ for every $a \in X$.
+\end{proof}
+
+%% ---------------------------------------------------------------------------
+\section{Strategies and the optimal cost}
+\label{sec:strategies}
+
+Let $X \subseteq A$ be nonempty; think of it as the set of answers the player
+still considers possible. A \emph{strategy for $X$} is a pair
+$\sigma = (g, (\sigma_\lambda)_\lambda)$ consisting of a guess $g \in A$ and, for
+each node $\lambda$ with $X^g_\lambda \ne \emptyset$, a strategy $\sigma_\lambda$
+for $X^g_\lambda$. This is an inductive definition, so every strategy is a finite
+tree. When the answer is $a \in X$, the strategy $\sigma$ guesses $g$; if
+$a \ne g$, it gets the feedback $\lambda = \lca(g, a)$, for which
+$a \in X^g_\lambda$, and continues with $\sigma_\lambda$. Let $N_\sigma(a)$ be the
+number of guesses $\sigma$ makes when the answer is $a$, up to and including the
+guess $a$. The \emph{cost} of $\sigma$ is
+\[
+  \Cost(\sigma) = \sum_{a \in X} N_\sigma(a)
+  = |X| + \sum_\lambda \Cost(\sigma_\lambda),
+\]
+where the sum is over the nodes $\lambda$ with $X^g_\lambda \ne \emptyset$: every
+answer in $X$ pays for the first guess, and each $a \in X^g_\lambda$ then pays
+$N_{\sigma_\lambda}(a)$ for the remaining guesses. Let
+\[
+  \Opt(X) = \min \{\Cost(\sigma) : \sigma \text{ is a strategy for } X\},
+  \qquad
+  \Opt(\emptyset) = 0.
+\]
+The minimum exists because costs are positive integers and every nonempty $X$
+has a strategy: by induction on $|X|$, guess any $g \in X$ and continue with any
+strategy for each nonempty $X^g_\lambda$, which is a subset of
+$X \setminus \{g\}$.
+
+Ways of playing as in Section~\ref{sec:game}, in which each guess may depend on
+the feedback so far, give strategies in this sense. Let $X \subseteq A$ be
+nonempty, and take a way of playing that finds every answer $a \in X$, with
+$N(a)$ guesses. Keeping only what it does when the answer is in $X$ gives a
+strategy $\sigma$ for $X$ with $N_\sigma(a) = N(a)$ for every $a \in X$: the
+first guess $g$ of $\sigma$ is the first guess of the way of playing, and for each
+node $\lambda$ with $X^g_\lambda \ne \emptyset$, $\sigma_\lambda$ is obtained in
+the same way from what the way of playing does after the feedback $\lambda$, for
+the set $X^g_\lambda$ (this is an induction on $\max_{a \in X} N(a)$). In
+particular, $\sum_{a \in X} N(a) \ge \Opt(X)$. A way of playing that doesn't
+always find the answer has an infinite expected number of guesses. So the smallest
+possible expected number of guesses is $\Opt(A)/n$, and a way of playing that
+finds every answer, with a total of $\Opt(A)$ guesses over all answers, minimizes
+the expected number of guesses.
+
+\begin{lemma}[Bellman equation]
+  \label{lem:bellman}
+  For every candidate set $X$,
+  \[
+    \Opt(X) = |X| + \min_{g \in X} \sum_\lambda \Opt(X^g_\lambda),
+  \]
+  where the sum is over all nodes $\lambda$ (only finitely many terms are
+  nonzero, as $\Opt(\emptyset) = 0$). In particular, $\Opt(\{a\}) = 1$ for every
+  answer node $a$.
+\end{lemma}
+
+\begin{proof}
+  ($\le$) For every $g \in X$, the strategy that guesses $g$ and then follows a
+  strategy of cost $\Opt(X^g_\lambda)$ for each nonempty $X^g_\lambda$ is a
+  strategy for $X$ with cost $|X| + \sum_\lambda \Opt(X^g_\lambda)$.
+
+  ($\ge$) Let $\sigma = (g, (\sigma_\lambda)_\lambda)$ be a strategy for $X$ with
+  $\Cost(\sigma) = \Opt(X)$. If $g \notin X$, then by Lemma~\ref{lem:useless},
+  $X$ itself is the only nonempty feedback class of $g$ on $X$, so
+  $\Opt(X) = |X| + \Cost(\sigma_\lambda) \ge |X| + \Opt(X) > \Opt(X)$, which is
+  impossible. So $g \in X$, and
+  $\Opt(X) = |X| + \sum_\lambda \Cost(\sigma_\lambda) \ge
+  |X| + \sum_\lambda \Opt(X^g_\lambda)$.
+
+  For $X = \{a\}$, which is the candidate set $A(a, \{\hat a\})$, the only
+  choice is $g = a$, which has no nonempty feedback classes, so
+  $\Opt(\{a\}) = 1$.
+\end{proof}
+
+%% ---------------------------------------------------------------------------
+\section{Splitting the cost by options}
+\label{sec:split}
+
+For an option $o$, let $C(o) = \Opt(A(o))$ be the optimal cost when the answer is
+known to be in $A(o)$. So $C(\hat v) = \Opt(\{v\}) = 1$, and $C(c) = \Opt(A_c)$
+for a child $c$. For a node $v$ and a set $S \subseteq O(v)$, let
+\[
+  F_v(S) = \Opt(A(v, S)).
+\]
+So $F_v(\emptyset) = 0$, $F_v(O(v)) = \Opt(A_v)$, and
+$F_v(R(v, i)) = \Opt(X(v, i))$.
+
+\begin{lemma}
+  \label{lem:split}
+  Let $v$ be a node, $S \subseteq O(v)$ nonempty, $X = A(v, S)$, and $o \in S$.
+  Then
+  \[
+    \min_{g \in A(o)} \Bigl( |X| + \sum_\lambda \Opt(X^g_\lambda) \Bigr)
+    = C(o) + w(S) - w(o) + F_v(S \setminus \{o\}).
+  \]
+  Consequently,
+  \[
+    F_v(S) = \min_{o \in S}
+      \bigl( C(o) + w(S) - w(o) + F_v(S \setminus \{o\}) \bigr).
+  \]
+\end{lemma}
+
+In words: to find an answer in $X$, the player first chooses an option $o$ to
+check. The answers outside $A(o)$ pay for one guess and then continue as if $o$
+had never been an option; the answers inside $A(o)$ pay exactly what they would
+pay if the answer had been known to be in $A(o)$ from the start.
+
+\begin{proof}
+  Let $g \in A(o)$. By Lemma~\ref{lem:feedback}, $X^g_v = A(v, S \setminus \{o\})$
+  and $X^g_\lambda = A(o)^g_\lambda$ for every node $\lambda \ne v$, so, since
+  $|X| = w(S)$,
+  \[
+    |X| + \sum_\lambda \Opt(X^g_\lambda)
+    = \bigl( w(S) - w(o) \bigr) + F_v(S \setminus \{o\})
+      + \Bigl( w(o) + \sum_{\lambda \ne v} \Opt\bigl(A(o)^g_\lambda\bigr) \Bigr).
+  \]
+  Only the last term depends on $g$.
+
+  If $o = \hat v$, then $g = v$ and $A(o) \setminus \{g\} = \emptyset$, so all the
+  classes $A(o)^g_\lambda$ are empty, and the last term is $w(\hat v) = 1 =
+  C(\hat v)$.
+
+  If $o$ is a child $c$, then $(A_c)^g_v = \emptyset$ by
+  Lemma~\ref{lem:feedback}(b), so the last term is
+  $|A_c| + \sum_\lambda \Opt\bigl((A_c)^g_\lambda\bigr)$, with the sum over all
+  nodes $\lambda$. By Lemma~\ref{lem:bellman} for the candidate set
+  $A_c = A(c, O(c))$, the minimum of this over $g \in A_c = A(o)$ is
+  $\Opt(A_c) = C(c)$.
+
+  This proves the first claim. The second follows from Lemma~\ref{lem:bellman},
+  since $X$ is the union of the sets $A(o)$ for $o \in S$, so minimizing over
+  $g \in X$ is the same as minimizing over $o \in S$ and then over $g \in A(o)$.
+\end{proof}
+
+%% ---------------------------------------------------------------------------
+\section{Checking the options largest first}
+\label{sec:order}
+
+\begin{lemma}
+  \label{lem:order}
+  Let $v$ be a node and $S \subseteq O(v)$ with $|S| = k$. Then
+  \[
+    F_v(S) = \sum_{o \in S} C(o)
+      + \min_{(o_0, \dots, o_{k-1})} \sum_{j=0}^{k-1} j \, w(o_j),
+  \]
+  where the minimum is over all orderings $(o_0, \dots, o_{k-1})$ of $S$. The
+  minimum is attained by every ordering with
+  $w(o_0) \ge w(o_1) \ge \dots \ge w(o_{k-1})$.
+\end{lemma}
+
+\begin{proof}
+  We prove the formula by induction on $k$. For $k = 0$, both sides are $0$. For
+  $k \ge 1$, Lemma~\ref{lem:split} and the induction hypothesis for the sets
+  $S \setminus \{o\}$ give
+  \[
+    F_v(S) = \min_{o \in S} \Bigl( C(o) + w(S \setminus \{o\})
+      + \sum_{o' \in S \setminus \{o\}} C(o')
+      + \min_{(o'_0, \dots, o'_{k-2})} \sum_{j=0}^{k-2} j \, w(o'_j) \Bigr),
+  \]
+  where the inner minimum is over the orderings of $S \setminus \{o\}$. Since
+  $w(S \setminus \{o\}) = \sum_{j=0}^{k-2} w(o'_j)$ for each such ordering,
+  \[
+    F_v(S) = \sum_{o \in S} C(o) + \min_{o \in S}
+      \min_{(o'_0, \dots, o'_{k-2})} \Bigl( 0 \cdot w(o)
+      + \sum_{j=0}^{k-2} (j + 1) \, w(o'_j) \Bigr).
+  \]
+  The expression in parentheses is $\sum_{j=0}^{k-1} j \, w(o_j)$ for the
+  ordering $(o_0, o_1, \dots, o_{k-1}) = (o, o'_0, \dots, o'_{k-2})$ of $S$, and
+  every ordering of $S$ arises this way from exactly one choice of $o$ and
+  $(o'_0, \dots, o'_{k-2})$. This proves the formula.
+
+  Now let $(o_0, \dots, o_{k-1})$ be an ordering that minimizes
+  $\sum_j j \, w(o_j)$; one exists since there are finitely many orderings. If
+  $w(o_j) < w(o_{j+1})$ for some $j$, then swapping $o_j$ and $o_{j+1}$ would
+  change the sum by
+  \[
+    \bigl( j \, w(o_{j+1}) + (j + 1) \, w(o_j) \bigr)
+    - \bigl( j \, w(o_j) + (j + 1) \, w(o_{j+1}) \bigr)
+    = w(o_j) - w(o_{j+1}) < 0,
+  \]
+  contradicting minimality. So every minimizing ordering has nonincreasing
+  weights. All orderings with nonincreasing weights have the same sequence of
+  weights $w(o_0), \dots, w(o_{k-1})$, and therefore the same sum, so each of
+  them attains the minimum.
+\end{proof}
+
+\begin{corollary}
+  \label{cor:first}
+  For every node $v$ and $0 \le i < k_v$,
+  \[
+    F_v(R(v, i)) = C(\ell_v(i)) + w(R(v, i)) - w(\ell_v(i)) + F_v(R(v, i + 1)).
+  \]
+\end{corollary}
+
+That is, when the remaining options are $R(v, i)$, it is optimal to check the
+largest one, $\ell_v(i)$, next.
+
+\begin{proof}
+  The orderings $(\ell_v(i), \dots, \ell_v(k_v - 1))$ of $R(v, i)$ and
+  $(\ell_v(i + 1), \dots, \ell_v(k_v - 1))$ of $R(v, i + 1)$ have nonincreasing
+  weights, so by Lemma~\ref{lem:order},
+  \begin{align*}
+    F_v(R(v, i)) &= \sum_{j=i}^{k_v - 1} C(\ell_v(j))
+      + \sum_{j=i}^{k_v - 1} (j - i) \, w(\ell_v(j)), \\
+    F_v(R(v, i + 1)) &= \sum_{j=i+1}^{k_v - 1} C(\ell_v(j))
+      + \sum_{j=i+1}^{k_v - 1} (j - i - 1) \, w(\ell_v(j)).
+  \end{align*}
+  The difference is $C(\ell_v(i)) + \sum_{j=i+1}^{k_v - 1} w(\ell_v(j))
+  = C(\ell_v(i)) + w(R(v, i)) - w(\ell_v(i))$.
+\end{proof}
+
+%% ---------------------------------------------------------------------------
+\section{The strategy is optimal}
+\label{sec:main}
+
+\begin{theorem}
+  \label{thm:main}
+  For every node $v$ and every $0 \le i < k_v$, playing from $(v, i)$ finds every
+  answer $a \in X(v, i)$, and
+  \[
+    \sum_{a \in X(v, i)} N_{v,i}(a) = \Opt(X(v, i)).
+  \]
+  In particular, playing from $(r, 0)$ finds every answer in $X(r, 0) = A$, with
+  a total of $\Opt(A)$ guesses, so it minimizes the expected number of guesses.
+\end{theorem}
+
+\begin{proof}
+  By induction on the height of $v$, and for nodes of the same height, on
+  $k_v - i$. Let $X = X(v, i)$, $S = R(v, i)$, $o = \ell_v(i)$, and
+  $g = \gamma(o)$, the first guess of playing from $(v, i)$. Recall that
+  $g \in A(o)$ and $\Opt(X) = F_v(S)$. The set $X$ is the disjoint union of
+  $X(v, i + 1)$ and $A(o)$, and we deal with these two parts in turn.
+
+  \emph{The answers in $X(v, i + 1)$.} Let $a \in X(v, i + 1)$, so that
+  $i + 1 < k_v$ and $a \in A(o')$ for some option $o' \ne o$ of $v$. By
+  Lemma~\ref{lem:feedback}(a), $\lca(g, a) = v$, so the guess $g$ is wrong, and
+  the player moves to the state $(v, i + 1)$. By the induction hypothesis for
+  $(v, i + 1)$, playing from $(v, i + 1)$ finds $a$. So playing from $(v, i)$
+  finds $a$, with $N_{v,i}(a) = 1 + N_{v,i+1}(a)$, and by the induction
+  hypothesis again,
+  \[
+    \sum_{a \in X(v, i + 1)} N_{v,i}(a)
+    = |X(v, i + 1)| + \Opt(X(v, i + 1))
+    = w(S) - w(o) + F_v(R(v, i + 1)).
+  \]
+  (If $i + 1 = k_v$, all three expressions are $0$.)
+
+  \emph{The answers in $A(o)$, if $o = \hat v$.} Then $A(o) = \{v\}$ and $g = v$,
+  so the only answer in $A(o)$ is found with one guess, and $1 = C(\hat v)$.
+
+  \emph{The answers in $A(o)$, if $o$ is a child $c$ of $v$.} Since
+  $s(c) \ge 1$, $c$ has an option, so $(c, 0)$ is a state, and playing from
+  $(c, 0)$ also starts with the guess $\gamma(\ell_c(0)) = \gamma(c) = g$. Let
+  $a \in A_c$. If $a = g$, both find $a$ with one guess. Otherwise, the feedback
+  $\lambda = \lca(g, a)$ is in $T_c$ by Lemma~\ref{lem:feedback}(b), so
+  $\lambda \ne v$, and playing from $(v, i)$ moves to $(\lambda, 1)$. Playing
+  from $(c, 0)$ moves to $(c, 1)$ if $\lambda = c$, since $c$ is its group, and to
+  $(\lambda, 1)$ otherwise; so it also moves to $(\lambda, 1)$. From then on, the
+  two plays are the same, since what the player does depends only on her state
+  and the answer. The height of $c$ is smaller than that of $v$, so by the
+  induction hypothesis for $(c, 0)$, playing from $(c, 0)$ finds every answer in
+  $X(c, 0) = A_c$ (in particular, it only moves to states, so $(\lambda, 1)$ is
+  one), and $\sum_{a \in A_c} N_{c,0}(a) = \Opt(A_c) = C(c)$. Hence playing from
+  $(v, i)$ finds every $a \in A_c$, with $N_{v,i}(a) = N_{c,0}(a)$, and
+  $\sum_{a \in A_c} N_{v,i}(a) = C(c)$.
+
+  In both cases, playing from $(v, i)$ finds every answer in $A(o)$, with a total
+  of $C(o)$ guesses. Adding up the two parts and using
+  Corollary~\ref{cor:first},
+  \[
+    \sum_{a \in X} N_{v,i}(a) = C(o) + w(S) - w(o) + F_v(R(v, i + 1))
+    = F_v(S) = \Opt(X).
+  \]
+  The last claim of the theorem follows from Section~\ref{sec:strategies}, since
+  playing from $(r, 0)$ is a way of playing as in Section~\ref{sec:game}.
+\end{proof}
+
+As a by-product, the proof gives a closed formula for the optimal expected number
+of guesses.
+
+\begin{corollary}[The optimal expected number of guesses]
+  For a node $v$, let $\pi(v) = \sum_{j=0}^{k_v - 1} j \, w(\ell_v(j))$. Then
+  \[
+    \Opt(A) = n + \sum_{v \in T} \pi(v),
+  \]
+  so the optimal expected number of guesses is
+  $1 + \frac{1}{n} \sum_{v \in T} \pi(v)$.
+\end{corollary}
+
+In words: $n$ counts the final, correct guess for each answer, and $\pi(v)$ is the
+waiting cost at $v$: when the options of $v$ are checked in the order $L(v)$, the
+answers in the $j$-th option (counting from $0$) wait for $j$ checks.
+
+\begin{proof}
+  We show that $\Opt(A_v) = s(v) + \sum_{u \in T_v} \pi(u)$ for every node $v$
+  with $s(v) \ge 1$, by induction on the height of $v$; the case $v = r$ is the
+  claim. By Lemma~\ref{lem:order} for $S = O(v)$ and the ordering $L(v)$,
+  \[
+    \Opt(A_v) = F_v(O(v)) = \sum_{o \in O(v)} C(o) + \pi(v).
+  \]
+  The options of $v$ are the children $c$ with $s(c) \ge 1$, for which
+  $C(c) = \Opt(A_c) = s(c) + \sum_{u \in T_c} \pi(u)$ by the induction
+  hypothesis, and, if $v \in A$, the option $\hat v$, with $C(\hat v) = 1$. The
+  children $c$ with $s(c) = 0$ have $\pi(u) = 0$ for every $u \in T_c$, since
+  such nodes $u$ have no options. Adding up gives
+  $\Opt(A_v) = s(v) + \sum_{u \in T_v} \pi(u)$.
+\end{proof}
+
+\end{document}

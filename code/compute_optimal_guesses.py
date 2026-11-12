@@ -4,10 +4,9 @@
 The game is played on a tree in which some nodes can be the answer. The answer is
 picked uniformly at random from those nodes, and the player guesses one of them at
 a time. After each wrong guess, the player is told the lowest common ancestor (LCA)
-of the guess and the answer. The strategy is a decision tree that minimizes the
-expected number of guesses: each decision is a guess, plus the decision to make next
-for each LCA the player can be told. Whenever several guesses are equally good, the
-strategy picks the one whose name is first alphabetically.
+of the guess and the answer. The strategy minimizes the expected number of guesses,
+and whenever several guesses are equally good, it picks the one whose name is first
+alphabetically. The proof that it's optimal is in math/proof.tex.
 
 The game tree is read from a CSV file with `id,name,canBeAnswer,parent` columns, where
 `canBeAnswer` is `true` or `false` and `parent` is the id of the node's parent, or
@@ -38,14 +37,14 @@ class Node:
         self.children = []
         self.size = 0  # number of answers in the subtree, set by count_answers
         self.options = []  # set by sort_options
+        self.guess = None  # set by sort_options
 
 
-class Decision:
-    def __init__(self, group, guess):
-        self.group = group  # the answer is known to be under this node
-        self.guess = guess
-        self.if_lca = {}  # LCA of the guess and the answer, if the guess is wrong -> next Decision
-        self.size = 0  # set by compute_sizes
+class Group:
+    def __init__(self, node, options):
+        self.node = node  # the last LCA the player was told
+        self.size = sum(option_size(node, option) for option in options)
+        self.guesses = [option_guess(node, option) for option in options]
 
 
 def read_tree(path):
@@ -84,18 +83,21 @@ def option_size(node, option):
 def option_guess(node, option):
     """Return the node to guess to check `option` of `node`.
 
-    The options of every node under `option` must already be sorted.
+    If `option` is a child, its guess must already be set by sort_options.
     """
-    return node if option is node else probe_path(option)[-1]
+    return node if option is node else option.guess
 
 
 def sort_options(node):
-    """Set the options of `node` and every node under it.
+    """Set the options and the guess of `node` and every node under it.
 
     The options of a node are the places an answer under it can be: each child with answers under
     it, plus the node itself if it can be the answer. They're sorted largest first, and options of
     the same size by the name of the guess that checks them, so that whenever several guesses are
     equally good, the strategy picks the one that's first alphabetically.
+
+    The guess of a node is the guess that checks its first option. It's the first guess to make
+    when the answer is known to be under the node.
     """
     for child in node.children:
         sort_options(child)
@@ -103,84 +105,36 @@ def sort_options(node):
     if node.can_be_answer:
         node.options.append(node)
     node.options.sort(key=lambda option: (-option_size(node, option), option_guess(node, option).name.casefold()))
+    if node.options:
+        node.guess = option_guess(node, node.options[0])
 
 
-def probe_path(option):
-    """Return the path from `option` down through each node's largest option, until a node's
-    largest option is itself. The last node on the path is the one to guess."""
-    path = [option]
-    while path[-1].options[0] is not path[-1]:
-        path.append(path[-1].options[0])
-    return path
+def strategy_groups(node, options):
+    """Yield the Group in which the player checks `options` of `node`, unless there are none, then
+    every Group under `node`.
 
-
-def build_decision(group, i):
-    """Return the Decision that checks group.options[i], or None if no options are left.
-
-    The answer is known to be under `group`, but not in group.options[:i].
+    The player checks every option of the root. She's only told another node after a guess in its
+    first option, so in any other group, she checks the options after the first.
     """
-    if i >= len(group.options):
-        return None
-
-    option = group.options[i]
-    path = [] if option is group else probe_path(option)
-    decision = Decision(group, path[-1] if path else group)
-
-    # LCA = group: the answer isn't in this option, so check the next one.
-    next_decision = build_decision(group, i + 1)
-    if next_decision:
-        decision.if_lca[group] = next_decision
-
-    # LCA = a node on the path: the answer is under that node, but not in its first option.
-    for node in path:
-        deeper = build_decision(node, 1)
-        if deeper:
-            decision.if_lca[node] = deeper
-
-    return decision
+    if options:
+        yield Group(node, options)
+    for child in node.children:
+        yield from strategy_groups(child, child.options[1:])
 
 
 def build_strategy(root):
-    """Return the first Decision of an optimal strategy, or None if no node can be the answer."""
+    """Return the Groups of an optimal strategy, which are empty if no node can be the answer."""
     count_answers(root)
     sort_options(root)
-    return build_decision(root, 0)
-
-
-def compute_sizes(decision):
-    """Set the size of `decision` and every Decision that can follow it, and return the size of `decision`.
-
-    The answers still possible when a decision is reached are exactly the guesses of the decisions
-    in its subtree, so its size is the number of decisions in the subtree.
-    """
-    decision.size = 1 + sum(compute_sizes(next_decision) for next_decision in decision.if_lca.values())
-    return decision.size
-
-
-def group_decisions(first):
-    """Yield the list of Decisions made in each group, starting with the group of `first`.
-
-    A group's list starts with the Decision made when the player first gets to the group, and goes
-    on for as long as the player is told the same group again.
-    """
-    group = first.group
-    decisions = [first]
-    while group in decisions[-1].if_lca:
-        decisions.append(decisions[-1].if_lca[group])
-    yield decisions
-    for decision in decisions:
-        for lca, next_decision in decision.if_lca.items():
-            if lca is not group:
-                yield from group_decisions(next_decision)
+    return list(strategy_groups(root, root.options))
 
 
 def write_csv(path, groups):
     with open(path, "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(["Size", "Group", "Guesses"])
-        for decisions in groups:
-            guesses = ", ".join(decision.guess.name for decision in decisions)
-            writer.writerow([decisions[0].size, decisions[0].group.name, guesses])
+        for group in groups:
+            writer.writerow([group.size, group.node.name, ", ".join(guess.name for guess in group.guesses)])
 
 
 def main():
@@ -189,12 +143,11 @@ def main():
     parser.add_argument("-o", "--output", required=True, help="path of the CSV file to write the strategy to")
     args = parser.parse_args()
 
-    first = build_strategy(read_tree(args.input))
-    if first is None:
+    groups = build_strategy(read_tree(args.input))
+    if not groups:
         sys.exit(f"No nodes in {args.input} can be the answer")
-    compute_sizes(first)
 
-    groups = sorted(group_decisions(first), key=lambda decisions: (-decisions[0].size, decisions[0].group.name.casefold()))
+    groups.sort(key=lambda group: (-group.size, group.node.name.casefold()))
     write_csv(args.output, groups)
     print(f"Wrote {len(groups)} groups to {args.output}", file=sys.stderr)
 
