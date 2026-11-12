@@ -1,0 +1,582 @@
+id,name,canBeAnswer,parent
+33208,Metazoa,false,
+202113,sea sponge,true,33208
+6072,Eumetazoa,false,33208
+6073,Cnidaria,false,6072
+37516,Hydroidolina,false,6073
+168775,man o war,true,37516
+6087,freshwater polyp,true,37516
+6102,Hexacorallia,false,6073
+6105,anemone,true,6102
+242715,brain coral,true,6102
+6143,Semaeostomeae,false,6073
+27804,lions mane jellyfish,true,6143
+6145,jellyfish,true,6143
+320166,comb jelly,true,6072
+33213,Bilateria,false,6072
+33317,Protostomia,false,33213
+1206794,Ecdysozoa,false,33317
+6236,Rhabditida,false,1206794
+6287,heartworm,true,6236
+6239,nematode,true,6236
+88770,Panarthropoda,false,1206794
+6656,Arthropoda,false,88770
+6843,Chelicerata,false,6656
+6850,horseshoe crab,true,6843
+6854,Arachnida,false,6843
+6855,Scorpiones,false,6854
+218467,bark scorpion,true,6855
+55084,emperor scorpion,true,6855
+6893,Araneae,false,6854
+260533,tarantula,true,6893
+6905,Araneomorphae,false,6893
+74970,Haplogynae,false,6905
+6921,brown recluse,true,74970
+280423,cellar spider,true,74970
+74971,Entelegynae,false,6905
+74975,Araneoidea,false,74971
+6925,black widow,true,74975
+299642,orbweaver spider,true,74975
+94015,Dionycha,false,74971
+2775238,peacock jumping spider,true,94015
+679132,huntsman spider,true,94015
+34613,tick,true,6854
+475616,harvestman,true,6854
+197563,Mandibulata,false,6656
+61985,Myriapoda,false,197563
+7540,Chilopoda,false,61985
+29022,house centipede,true,7540
+2716284,giant centipede,true,7540
+291247,millipede,true,61985
+3701028,Altocrustacea,false,197563
+3701029,Communostraca,false,3701028
+72041,Eumalacostraca,false,3701029
+13347,pillbug,true,72041
+3701045,Stomatocarida,false,72041
+6683,Decapoda,false,3701045
+6687,tiger prawn,true,6683
+6692,Pleocyemata,false,6683
+2109549,pistol shrimp,true,6692
+6707,lobster,true,6692
+6744,Paguroidea,false,6692
+1129476,hermit crab,true,6744
+177283,coconut crab,true,6744
+1647984,fiddler crab,true,6692
+102976,krill,true,3701045
+120888,mantis shrimp,true,3701045
+110520,barnacle,true,3701029
+85512,Dicondylia,false,3701028
+7496,Pterygota,false,85512
+33339,Palaeoptera,false,7496
+1646243,dragonfly,true,33339
+1678817,mayfly,true,33339
+33340,Neoptera,false,7496
+33341,Polyneoptera,false,33340
+6970,Dictyoptera,false,33341
+7507,praying mantis,true,6970
+1049657,Blattoidea,false,6970
+6978,cockroach,true,1049657
+36987,termite,true,1049657
+6993,Orthoptera,false,33341
+58607,cricket,true,6993
+7008,Schistocerca,false,6993
+7009,grasshopper,true,7008
+7010,locust,true,7008
+213547,Verophasmatodea,false,33341
+7022,stick bug,true,213547
+2815683,leaf insect,true,213547
+13068,earwig,true,33341
+3701061,Eumetabola,false,33340
+7524,Hemiptera,false,3701061
+212017,water bug,true,7524
+1955247,Auchenorrhyncha,false,7524
+130591,lanternfly,true,1955247
+44679,cicada,true,1955247
+33392,Endopterygota,false,3701061
+7434,Aculeata,false,33392
+7439,Vespinae,false,7434
+7445,hornet,true,7439
+30213,wasp,true,7439
+70987,Apinae,false,7434
+132113,bumble bee,true,70987
+7460,honey bee,true,70987
+1317727,tarantula hawk wasp,true,7434
+36668,Formicidae,false,7434
+104421,carpenter ant,true,36668
+13686,fire ant,true,36668
+3701062,Aparaglossata,false,33392
+3701063,Panorpida,false,3701062
+7147,Diptera,false,3701063
+7159,mosquito,true,7147
+43738,Schizophora,false,7147
+7227,fruit fly,true,43738
+7370,house fly,true,43738
+50434,flea,true,3701063
+104431,Obtectomera,false,3701063
+37569,Bombycoidea,false,104431
+7091,silkworm,true,37569
+63978,atlas moth,true,37569
+13037,monarch butterfly,true,104431
+41084,Polyphaga,false,3701062
+7055,Scarabaeidae,false,41084
+166335,dung beetle,true,7055
+1247135,hercules beetle,true,7055
+7051,firefly,true,41084
+41139,ladybug,true,41084
+50586,silverfish,true,85512
+1385931,velvet worm,true,88770
+46460,tardigrade,true,88770
+1206795,Lophotrochozoa,false,33317
+6206,tapeworm,true,1206795
+6340,Annelida,false,1206795
+1914524,Christmas tree worm,true,6340
+42113,Clitellata,false,6340
+6398,earthworm,true,42113
+6421,leech,true,42113
+6447,Mollusca,false,1206795
+216366,Helicina,false,6447
+6536,snail,true,216366
+2067768,banana slug,true,216366
+2785011,Autobranchia,false,6447
+6545,Pteriomorphia,false,2785011
+6550,mussel,true,6545
+29159,oyster,true,6545
+301549,scallop,true,6545
+6599,Heteroconchia,false,2785011
+52365,freshwater mussel,true,6599
+2908833,Neoheterodontei,false,6599
+6584,sea clam,true,2908833
+80829,giant clam,true,2908833
+6605,Cephalopoda,false,6447
+6606,Coleoidea,false,6605
+215450,Decapodiformes,false,6606
+256136,giant squid,true,215450
+6610,cuttlefish,true,215450
+34570,bigfin squid,true,215450
+215451,Octopodiformes,false,6606
+6647,Octopodidae,false,215451
+102866,blue-ringed octopus,true,6647
+267067,giant octopus,true,6647
+55288,vampire squid,true,215451
+34578,nautilus,true,6605
+33511,Deuterostomia,false,33213
+133551,Eleutherozoa,false,33511
+7604,starfish,true,133551
+7624,Echinozoa,false,133551
+7638,Euechinoidea,false,7624
+7671,sea urchin,true,7638
+1351942,sand dollar,true,7638
+571810,sea cucumber,true,7624
+7742,Vertebrata,false,33511
+7776,Gnathostomata,false,7742
+7778,Elasmobranchii,false,7776
+117851,Myliobatiformes,false,7778
+2484686,sting ray,true,117851
+1983395,manta ray,true,117851
+119195,Galeoidea,false,7778
+7805,Carcharhinidae,false,119195
+7819,tiger shark,true,7805
+195334,hammerhead shark,true,7805
+30496,Lamniformes,false,119195
+57987,goblin shark,true,30496
+13397,great white shark,true,30496
+259920,whale shark,true,119195
+117571,Euteleostomi,false,7776
+32443,Teleostei,false,117571
+586820,moray eel,true,32443
+186625,Clupeocephala,false,32443
+186634,Otomorpha,false,186625
+186626,Otophysi,false,186634
+30727,Cyprinoidei,false,186626
+2743694,Cyprininae,false,30727
+7957,goldfish,true,2743694
+7962,carp,true,2743694
+71769,pikeminnow,true,30727
+186628,Characiphysae,false,186626
+42514,piranha,true,186628
+7998,catfish,true,186628
+8005,electric eel,true,186628
+7948,Clupeinae,false,186634
+7950,herring,true,7948
+96889,sardine,true,7948
+1489388,Euteleosteomorpha,false,186625
+41705,Protacanthopterygii,false,1489388
+504568,Salmoninae,false,41705
+8022,trout,true,504568
+8030,salmon,true,504568
+8010,pike,true,41705
+123368,Acanthomorphata,false,1489388
+81389,oarfish,true,123368
+1489872,Percomorphaceae,false,123368
+109280,seahorse,true,1489872
+186745,Scombrinae,false,1489872
+29150,mackerel,true,186745
+8236,tuna,true,186745
+1489892,Anabantaria,false,1489872
+206118,fire eel,true,1489892
+209230,betta fish,true,1489892
+1489904,Carangaria,false,1489872
+195615,halibut,true,1489904
+70868,barracuda,true,1489904
+8245,swordfish,true,1489904
+1489908,Ovalentaria,false,1489872
+161767,clownfish,true,1489908
+8142,tilapia,true,1489908
+1489913,Atherinomorphae,false,1489908
+8081,guppy,true,1489913
+129044,flying fish,true,1489913
+1489922,Eupercaria,false,1489872
+8074,anglerfish,true,1489922
+8167,perch,true,1489922
+342437,pufferfish,true,1489922
+27706,bass,true,1489922
+8049,cod,true,123368
+8287,Sarcopterygii,false,117571
+7897,coelacanth,true,8287
+32523,Tetrapoda,false,8287
+41666,Batrachia,false,32523
+30367,Salamandroidea,false,41666
+8296,axolotl,true,30367
+8314,Salamandridae,false,30367
+54263,newt,true,8314
+57571,salamander,true,8314
+8416,Neobatrachia,false,41666
+8417,Hyloidea,false,8416
+8384,toad,true,8417
+51949,poison frog,true,8417
+8400,bullfrog,true,8416
+32524,Amniota,false,32523
+32561,Sauria,false,32524
+1329961,Bifurcata,false,32561
+301843,gecko,true,1329961
+1329950,Unidentata,false,1329961
+96725,skink,true,1329950
+1329911,Toxicofera,false,1329950
+8511,Iguania,false,1329911
+8517,iguana,true,8511
+91907,chameleon,true,8511
+8548,Anguimorpha,false,1329911
+8554,gila monster,true,8548
+61221,komodo dragon,true,8548
+8570,Serpentes,false,1329911
+34979,Henophidia,false,8570
+8572,Boidae,false,34979
+8574,boa constrictor,true,8572
+51876,anaconda,true,8572
+34984,Pythonidae,false,34979
+176946,burmese python,true,34984
+129333,green tree python,true,34984
+34989,Colubroidea,false,8570
+8602,Elapidae,false,34989
+42168,Elapinae,false,8602
+8624,black mamba,true,42168
+8665,king cobra,true,42168
+8688,sea snake,true,8602
+8689,Viperidae,false,34989
+8697,viper,true,8689
+8730,rattlesnake,true,8689
+1329799,Archelosauria,false,32561
+8492,Archosauria,false,1329799
+8782,Aves,false,8492
+8783,Palaeognathae,false,8782
+8784,Casuariiformes,false,8783
+8787,cassowary,true,8784
+8790,emu,true,8784
+8801,ostrich,true,8783
+308060,kiwi,true,8783
+8825,Neognathae,false,8782
+1549675,Galloanserae,false,8825
+8830,Anatidae,false,1549675
+8839,duck,true,8830
+2068722,Anserinae,false,8830
+8853,goose,true,2068722
+8869,swan,true,2068722
+9005,Phasianidae,false,1549675
+9072,Phasianinae,false,9005
+9031,chicken,true,9072
+9042,pheasant,true,9072
+9049,peacock,true,9072
+9103,turkey,true,9005
+3078114,Neoaves,false,8825
+8906,Charadriiformes,false,3078114
+35669,seagull,true,8906
+28701,puffin,true,8906
+1977160,crane,true,3078114
+8892,Apodiformes,false,3078114
+8895,swift,true,8892
+2082998,hummingbird,true,8892
+8930,Columbidae,false,3078114
+135631,dove,true,8930
+262124,pigeon,true,8930
+435638,flamingo,true,3078114
+55661,cuckoo,true,3078114
+3073808,Telluraves,false,3078114
+30458,Strigiformes,false,3073808
+371907,snowy owl,true,30458
+56313,barn owl,true,30458
+3073809,Australaves,false,3073808
+8952,Falco,false,3073809
+8954,falcon,true,8952
+56350,kestrel,true,8952
+9126,Passeriformes,false,3073809
+9187,blackbird,true,9126
+36291,Muscicapidae,false,9126
+37610,robin,true,36291
+383689,nightingale,true,36291
+60713,mockingbird,true,9126
+36278,wren,true,9126
+175121,Passeroidea,false,9126
+9133,Fringillidae,false,175121
+37607,finch,true,9133
+163847,canary,true,9133
+48849,sparrow,true,175121
+28725,Corvidae,false,9126
+28727,blue jay,true,28725
+30420,Corvus,false,28725
+56781,raven,true,30420
+85066,crow,true,30420
+34924,magpie,true,28725
+43150,swallow,true,9126
+9223,Psittaciformes,false,3073809
+9224,Psittacidae,false,9223
+51908,parakeet,true,9224
+57247,grey parrot,true,9224
+51900,macaw,true,9224
+35549,Cacatuidae,false,9223
+12983,cockatoo,true,35549
+13180,cockatiel,true,35549
+9219,Piciformes,false,3073808
+51359,woodpecker,true,9219
+95723,toucan,true,9219
+2558200,Accipitriformes,false,3073808
+8922,Cathartidae,false,2558200
+8924,condor,true,8922
+43455,turkey vulture,true,8922
+33614,black vulture,true,8922
+8955,Accipitrinae,false,2558200
+1037346,hawk,true,8955
+52644,bald eagle,true,8955
+52810,kite,true,8955
+56262,osprey,true,2558200
+3073812,Aequornithes,false,3078114
+9205,Pelecaniformes,false,3073812
+30389,Ardea,false,9205
+56072,heron,true,30389
+110620,egret,true,30389
+36301,pelican,true,9205
+9231,Spheniscidae,false,3073812
+9233,emperor penguin,true,9231
+79627,macaroni penguin,true,9231
+37039,loon,true,3073812
+46550,albatross,true,3073812
+37087,blue-footed booby,true,3073812
+1294634,Crocodylia,false,8492
+1294636,Alligatoridae,false,1294634
+8496,alligator,true,1294636
+190476,caiman,true,1294636
+8502,crocodile,true,1294634
+1579337,Durocryptodira,false,1329799
+8486,Testudinoidea,false,1579337
+158814,box turtle,true,8486
+66189,tortoise,true,8486
+1579336,Americhelydia,false,1579337
+27794,sea turtle,true,1579336
+8475,snapping turtle,true,1579336
+40674,Mammalia,false,32524
+9255,Monotremata,false,40674
+9258,platypus,true,9255
+9261,echidna,true,9255
+32525,Theria,false,40674
+9263,Metatheria,false,32525
+9268,opossum,true,9263
+9305,tasmanian devil,true,9263
+38609,Diprotodontia,false,9263
+9321,kangaroo,true,38609
+34899,sugar glider,true,38609
+29139,wombat,true,38609
+9333,possum,true,38609
+38626,koala,true,38609
+9347,Eutheria,false,32525
+9348,Xenarthra,false,9347
+948950,Pilosa,false,9348
+84074,anteater,true,948950
+27675,two-toed sloth,true,948950
+340076,armadillo,true,9348
+311790,Afrotheria,false,9347
+9778,manatee,true,311790
+9785,elephant,true,311790
+9813,hyrax,true,311790
+9818,aardvark,true,311790
+1437010,Boreoeutheria,false,9347
+314145,Laurasiatheria,false,1437010
+9362,Eulipotyphla,false,314145
+9365,hedgehog,true,9362
+9375,mole,true,9362
+9397,Chiroptera,false,314145
+505845,fruit bat,true,9397
+9430,vampire bat,true,9397
+9787,Perissodactyla,false,314145
+9789,Equus,false,9787
+9793,donkey,true,9789
+9796,horse,true,9789
+89248,zebra,true,9789
+9802,tapir,true,9787
+9807,rhinoceros,true,9787
+9974,pangolin,true,314145
+33554,Carnivora,false,314145
+379583,Feliformia,false,33554
+94186,civet,true,379583
+9678,hyena,true,379583
+9681,Felidae,false,379583
+338152,Felinae,false,9681
+9685,cat,true,338152
+13124,Lynx,false,338152
+13125,lynx,true,13124
+61384,bobcat,true,13124
+32536,cheetah,true,338152
+32538,ocelot,true,338152
+9696,puma,true,338152
+9688,Panthera,false,9681
+9689,lion,true,9688
+9690,jaguar,true,9688
+9691,leopard,true,9688
+9694,tiger,true,9688
+9697,Herpestidae,false,379583
+9700,mongoose,true,9697
+37032,meerkat,true,9697
+379584,Caniformia,false,33554
+9608,Canidae,false,379584
+9611,Canis,false,9608
+9612,wolf,true,9611
+9615,dog,true,9612
+9614,coyote,true,9611
+68724,jackal,true,9611
+9625,Vulpes,false,9608
+9627,red fox,true,9625
+494514,arctic fox,true,9625
+3370412,tanuki,true,9608
+9632,Ursidae,false,379584
+9639,Ursus,false,9632
+9643,black bear,true,9639
+9644,brown bear,true,9639
+29073,polar bear,true,9639
+9646,giant panda,true,9632
+3072905,Pinnipedia,false,379584
+9704,sea lion,true,3072905
+9707,walrus,true,3072905
+9711,seal,true,3072905
+3072906,Musteloidea,false,379584
+9647,Procyonidae,false,3072906
+9654,raccoon,true,9647
+29067,kinkajou,true,9647
+9655,Mustelidae,false,3072906
+169417,Lutrinae,false,9655
+34882,sea otter,true,169417
+76717,river otter,true,169417
+169418,Mustelinae,false,9655
+9665,Mustela,false,169418
+9666,mink,true,9665
+9669,ferret,true,9665
+3370370,weasel,true,169418
+30554,badger,true,9655
+48420,wolverine,true,9655
+30548,skunk,true,3072906
+9649,red panda,true,3072906
+91561,Artiodactyla,false,314145
+9835,Camelidae,false,91561
+9838,camel,true,9835
+9844,llama,true,9835
+30538,alpaca,true,9835
+35500,Pecora,false,91561
+9850,Cervidae,false,35500
+9881,Odocoileinae,false,9850
+9852,moose,true,9881
+9870,caribou,true,9881
+9874,deer,true,9881
+1574408,elk,true,9850
+9894,giraffe,true,35500
+9895,Bovidae,false,35500
+37751,gazelle,true,9895
+37189,antelope,true,9895
+9963,Caprinae,false,9895
+9922,Capra,false,9963
+9925,goat,true,9922
+72542,ibex,true,9922
+9940,sheep,true,9963
+27592,Bovinae,false,9895
+9901,bison,true,27592
+9903,Bos,false,27592
+9913,cattle,true,9903
+30521,yak,true,9903
+89462,water buffalo,true,27592
+9927,wildebeest,true,9895
+9821,Suidae,false,91561
+9823,pig,true,9821
+41426,warthog,true,9821
+2653789,Whippomorpha,false,91561
+9721,Cetacea,false,2653789
+9722,Odontoceti,false,9721
+9726,Delphinidae,false,9722
+9733,orca,true,9726
+9739,dolphin,true,9726
+9742,porpoise,true,9722
+9747,Monodontidae,false,9722
+9749,beluga whale,true,9747
+40151,narwhal,true,9747
+9755,sperm whale,true,9722
+9765,Balaenopteridae,false,9721
+9771,blue whale,true,9765
+9773,humpback whale,true,9765
+9833,hippopotamus,true,2653789
+314146,Euarchontoglires,false,1437010
+9443,Primates,false,314146
+9447,lemur,true,9443
+314293,Simiiformes,false,9443
+9479,Platyrrhini,false,314293
+9498,Cebidae,false,9479
+30588,tamarin,true,9498
+37295,capuchin,true,9498
+182253,howler monkey,true,9479
+9526,Catarrhini,false,314293
+9528,Cercopithecinae,false,9526
+9542,macaque,true,9528
+100937,baboon,true,9528
+9561,mandrill,true,9528
+314295,Hominoidea,false,9526
+61853,gibbon,true,314295
+9604,Hominidae,false,314295
+207598,Homininae,false,9604
+9593,gorilla,true,207598
+9596,Pan,false,207598
+9597,bonobo,true,9596
+9598,chimpanzee,true,9596
+9606,human,true,207598
+9601,orangutan,true,9604
+314147,Glires,false,314146
+9979,Leporidae,false,314147
+48087,hare,true,9979
+9986,rabbit,true,9979
+9989,Rodentia,false,314147
+33550,Hystricomorpha,false,9989
+10138,porcupine,true,33550
+10141,guinea pig,true,33550
+10149,capybara,true,33550
+10152,chinchilla,true,33550
+10181,naked mole rat,true,33550
+55153,Sciuridae,false,9989
+9991,Sciurinae,false,55153
+254707,flying squirrel,true,9991
+30640,squirrel,true,9991
+337730,Marmotini,false,55153
+9995,groundhog,true,337730
+45474,chipmunk,true,337730
+45480,prairie dog,true,337730
+51338,beaver,true,9989
+337687,Muroidea,false,9989
+10066,Muridae,false,337687
+10047,gerbil,true,10066
+39107,Murinae,false,10066
+10090,mouse,true,39107
+10116,rat,true,39107
+10036,hamster,true,337687
+338475,lamprey,true,7742
